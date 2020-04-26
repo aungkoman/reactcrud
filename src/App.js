@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from "react"; 
 import Button from '@material-ui/core/Button';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -502,7 +503,7 @@ function App() {
 
   const [internalLink,setInternalLink] = React.useState('');
   const [dialogOkState,setDialogOkState] = React.useState({status:false,title:"Title",content:'Content'});
-  const [alertSuccessState,setAlertSuccessState] = React.useState({status:true,title:"Title",content:'Content'});
+  
 
   const login = ({username,password}) =>{
     // login operation
@@ -549,6 +550,7 @@ function App() {
           else if(data.data.role == "user"){
             //setBackdropText('Login Success'); // alert / snack bar
             setUser(data.data);
+            localStorage.setItem("user",JSON.stringify(data.data));
             setInternalLink('usersection');
             setBackdrop(false);
             // let limit = 0;
@@ -562,6 +564,7 @@ function App() {
           }else{
             setBackdropText('Login Success');
             setUser(data.data);
+            localStorage.setItem("user",JSON.stringify(data.data));
             setInternalLink('main');
             let limit = 0;
             let last_id = 0;
@@ -883,6 +886,7 @@ function App() {
             return d;
           });
           setUsers(dataTemp);
+          localStorage.setItem("users",JSON.stringify(dataTemp));
           setBackdropText('Select data success');
         }else{
           setBackdropText('Username and password do not match!');
@@ -903,9 +907,7 @@ function App() {
     })
   }
 
-  const closeAlert = () =>{
-    console.log("closeAlert");
-  }
+  
   const closeDialogOk = () =>{
     let obj = {status:false,title:"Title",content:'Content'};
     setDialogOkState(obj);
@@ -925,7 +927,7 @@ function App() {
     setState({ ...state, [anchor]: open });
   };
 
-  const list = (anchor) => (
+  const list = (anchor,logout) => (
     <div
       className={clsx(classes.list, {
         [classes.fullList]: anchor === 'top' || anchor === 'bottom',
@@ -956,15 +958,40 @@ function App() {
             <ExitToAppIcon />
           </ListItemIcon>
           <ListItemText>
-            <ReactLink to=""  style={{textDecoration:"none"}}>Logout</ReactLink>
+            <ReactLink to=""  style={{textDecoration:"none"}} onClick={logout}>Logout</ReactLink>
           </ListItemText>
         </ListItem>
       </List>
     </div>
   );
 
+const logout = () =>{
+  console.log("logout");
+  localStorage.removeItem('user');
+  localStorage.removeItem('users');
+}
+      useEffect ( ()=>{
+        // initialization phase 
+        console.log("useEFfect");
 
-
+        // get login satus
+        let userData = localStorage.getItem('user');
+        console.log(userData);
+        if(userData == undefined){
+          console.log("userData is undefined");
+        }
+        else{
+          userData = JSON.parse(userData);
+          setUser(userData);
+          let usersData = JSON.parse(localStorage.getItem('users'));
+          setUsers(usersData);
+          setInternalLink('/main');
+          let limit = 0;
+          let last_id = 0;
+          selectAllUser({limit,last_id});
+        }
+      
+      },{});
   return (
     <Router>
       <div className="App">
@@ -1013,7 +1040,7 @@ function App() {
                   <React.Fragment key={anchor}>
                     
                     <Drawer anchor={anchor} open={state[anchor]} onClose={toggleDrawer(anchor, false)}>
-                      {list(anchor)}
+                      {list(anchor,logout)}
                     </Drawer>
                   </React.Fragment>
                 ))}
